@@ -40,8 +40,8 @@ def extract_text_from_pdf(file_path):
     except Exception as e:
         logger.warning(f"pdfplumber failed: {e}")
     
-    # If insufficient text (<50 chars), try OCR
-    if not text or len(text.strip()) < 50:
+    # If text is empty, try OCR
+    if not text:
         logger.debug("Insufficient text extracted; attempting OCR")
         try:
             # Set Tesseract path explicitly
