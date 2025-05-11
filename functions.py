@@ -62,9 +62,9 @@ def extract_text_from_pdf(file_path):
         except Exception as e:
             logger.error(f"OCR failed: {e}")
             if "poppler" in str(e).lower() or "page count" in str(e).lower():
-                raise ValueError("OCR failed: Ensure poppler is installed at C:\\poppler\\Library\\bin or update poppler_path in app.py. See https://pdf2image.readthedocs.io/en/latest/installation.html")
+                raise ValueError("OCR failed: Ensure poppler is installed")
             if "tesseract" in str(e).lower():
-                raise ValueError("OCR failed: Ensure Tesseract is installed at C:\\Program Files\\Tesseract-OCR\\tesseract.exe or update tesseract_cmd in app.py. See https://github.com/madmaze/pytesseract")
+                raise ValueError("OCR failed: Ensure Tesseract is installed")
             # Continue to check for meaningful text
     
     # Final check for meaningful text
