@@ -31,7 +31,7 @@ The **PDF Chatbot** is an advanced web application that allows users to upload P
 
     ```bash
     python -m venv venv
-    `venv\Scripts\activate`
+    venv\Scripts\activate
     ```
 
 2. **Install Dependencies**
