@@ -8,6 +8,8 @@ from nltk.tokenize import sent_tokenize
 import logging
 from dotenv import load_dotenv
 import os
+from pdf2image import convert_from_path
+import pytesseract
 import google.generativeai as genai
 
 load_dotenv()
@@ -25,16 +27,53 @@ nltk.download('punkt')
 # Function to extract text from PDF
 def extract_text_from_pdf(file_path):
     logger.debug(f"Extracting text from PDF: {file_path}")
+    text = ""
+    
+    # Try extracting text with pdfplumber first
     try:
         with pdfplumber.open(file_path) as pdf:
-            text = ''
             for page in pdf.pages:
-                text+= page.extract_text() + "\n"
-            logger.debug(f"Successfully extracted text from PDF: {file_path}")
-            return text
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
+        logger.debug(f"Extracted {len(text)} characters with pdfplumber")
     except Exception as e:
-        logger.error(f"Error extracting text from PDF: {e}")
-        return None
+        logger.warning(f"pdfplumber failed: {e}")
+    
+    # If insufficient text (<50 chars), try OCR
+    if not text or len(text.strip()) < 50:
+        logger.debug("Insufficient text extracted; attempting OCR")
+        try:
+            # Set Tesseract path explicitly
+            pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+            # Convert PDF pages to images with explicit poppler path
+            logger.debug("Attempting to convert PDF to images with poppler")
+            images = convert_from_path(file_path, poppler_path=r'C:\poppler\Library\bin')
+            logger.debug(f"Converted PDF to {len(images)} images")
+            ocr_text = ""
+            for i, image in enumerate(images):
+                # Extract text from each image using Tesseract
+                page_text = pytesseract.image_to_string(image, lang='eng')
+                if page_text:
+                    ocr_text += page_text + "\n"
+                logger.debug(f"OCR extracted {len(page_text)} characters from page {i+1}")
+            text = ocr_text if ocr_text.strip() else text
+            logger.debug(f"Total OCR text: {len(text)} characters")
+        except Exception as e:
+            logger.error(f"OCR failed: {e}")
+            if "poppler" in str(e).lower() or "page count" in str(e).lower():
+                raise ValueError("OCR failed: Ensure poppler is installed at C:\\poppler\\Library\\bin or update poppler_path in app.py. See https://pdf2image.readthedocs.io/en/latest/installation.html")
+            if "tesseract" in str(e).lower():
+                raise ValueError("OCR failed: Ensure Tesseract is installed at C:\\Program Files\\Tesseract-OCR\\tesseract.exe or update tesseract_cmd in app.py. See https://github.com/madmaze/pytesseract")
+            # Continue to check for meaningful text
+    
+    # Final check for meaningful text
+    if not text or len(text.strip()) < 50:
+        logger.error("No meaningful text extracted from PDF")
+        raise ValueError("No meaningful text extracted from the PDF. It may be scanned with poor quality or empty.")
+    
+    logger.debug("Text extraction successful")
+    return text
 
 # Function to split text into chunks for embedding
 def chunk_text(text,chunk_size=200,overlap_ratio=0.2):
