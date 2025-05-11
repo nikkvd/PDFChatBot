@@ -68,7 +68,7 @@ def extract_text_from_pdf(file_path):
             # Continue to check for meaningful text
     
     # Final check for meaningful text
-    if not text or len(text.strip()) < 50:
+    if not text:
         logger.error("No meaningful text extracted from PDF")
         raise ValueError("No meaningful text extracted from the PDF. It may be scanned with poor quality or empty.")
     
