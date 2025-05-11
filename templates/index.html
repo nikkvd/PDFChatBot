@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
+</head>
+<body>
+    <div class="container">
+        <h1>PDF Chatbot</h1>
+        <div class="upload-section">
+            <form id="upload-form" enctype="multipart/form-data" method="POST">
+                <input type="file" name="file" id="file_input" accept=".pdf" required>
+                <button type="submit">Upload PDF</button>
+            </form>
+            <div class="loading" id="loading" style="display: none;">Processing PDF...</div>
+            {% if message %}
+                <div class="message">{{ message }}</div>
+            {% endif %}
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+        </div>
+        <div class="chat-section" id="chat-section" {% if show_chat %}style="display: block;"{% else %}style="display: none;"{% endif %}>
+            <div class="chat-box" id="chat-box">
+                {% if show_chat and current_filename %}
+                    <div class="chat-message bot-message">Hi. You can ask any questions from {{ current_filename }} file.</div>
+                {% endif %}
+                {% for chat in recent_chats %}
+                    <div class="chat-message user-message">{{ chat.query }}</div>
+                    <div class="chat-message bot-message">{{ chat.response }}</div>
+                {% endfor %}
+            </div>
+            <div class="input-section">
+                <input type="text" id="query-input" placeholder="Ask a question about the PDF...">
+                <button onclick="sendQuery()">Send</button>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>

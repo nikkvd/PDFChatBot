@@ -1,0 +1,8 @@
+sentence-transformers 
+faiss-cpu  
+nltk
+pdfplumber
+flask
+werkzeug
+python-dotenv
+google-generativeai
