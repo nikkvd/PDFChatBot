@@ -1,20 +1,20 @@
 # PDF Chatbot
 
-The **PDF Chatbot** is an advanced web application that allows users to upload PDF documents and interact with them through a conversational interface. Powered by a **Retrieval-Augmented Generation (RAG)** model, it combines natural language processing (NLP), vector search, and Google’s Generative AI to deliver accurate, document-specific answers.
+The **PDF Chatbot** is a web application that allows users to interact with PDF documents through a conversational interface. Powered by a Retrieval-Augmented Generation (RAG) architecture, it combines Natural Language Processing (NLP), vector similarity search, and Google Generative AI to provide accurate, document-specific answers. The chatbot supports both text-based and scanned PDFs using OCR when needed.
 
 ---
 
 ## Features
 
-- **PDF Upload:** Upload PDF files via a simple web interface.
-- **Text Extraction:** Uses `pdfplumber` to extract reliable content from PDFs.
-- **Text Chunking:** Splits text into sentence-overlapped chunks for better contextual understanding.
-- **Vector Database:** Uses `all-MiniLM-L6-v2` and FAISS for fast similarity-based retrieval.
-- **Query Processing:** Supports natural language queries with responses generated using Google Generative AI.
-- **Chat Interface:** Clean, responsive UI for chat-based interaction.
-- **Recent Chats:** Stores the last five interactions in a JSON file.
-- **Upload Management:** Securely overwrites existing files to manage space.
-- **Responsive Design:** Optimized for desktop, tablet, and mobile use.
+- **PDF Upload**: Simple web interface for uploading PDFs.
+- **Text Extraction**: Uses `pdfplumber` for text-based PDFs and `pytesseract` with `pdf2image` for scanned PDFs.
+- **Text Chunking**: Splits text into overlapping chunks for better context retrieval.
+- **Vector Database**: Uses `all-MiniLM-L6-v2` and `FAISS` for fast similarity search.
+- **Query Processing**: Natural language queries processed via Google Generative AI.
+- **Chat Interface**: Responsive chat UI for smooth interaction.
+- **Recent Chats**: Last five interactions stored in a JSON file.
+- **Upload Management**: Overwrites old files to manage storage.
+- **OCR Support**: Handles image-based PDFs using Tesseract OCR.
 
 ---
 
@@ -23,24 +23,27 @@ The **PDF Chatbot** is an advanced web application that allows users to upload P
 ### Prerequisites
 
 - Python 3.8 or higher
-- `pip` for installing dependencies
+- `pip` for dependency management
+- **Poppler**: Required by `pdf2image` for scanned PDFs.
+- **Tesseract OCR**: Required for extracting text from scanned PDFs.
 
 ### Installation Steps
 
-1. **Create Virtual Environment (Optional but Recommended)**
+1. **Create a Virtual Environment** (optional but recommended):
 
     ```bash
     python -m venv venv
-    venv\Scripts\activate
+    source venv/bin/activate   # Linux/macOS
+    venv\Scripts\activate      # Windows
     ```
 
-2. **Install Dependencies**
+2. **Install Dependencies**:
 
     ```bash
     pip install -r requirements.txt
     ```
 
-    Key dependencies include:
+    Key packages include:
 
     - `sentence-transformers`
     - `faiss-cpu`
@@ -50,145 +53,143 @@ The **PDF Chatbot** is an advanced web application that allows users to upload P
     - `werkzeug`
     - `python-dotenv`
     - `google-generativeai`
+    - `pdf2image`
+    - `pytesseract`
 
-3. **Configure Google API Key**
+3. **Install Poppler**:
 
-    Create a `.env` file in the project root:
+    - **Windows**:
+        - Download from: https://github.com/oschwartz10612/poppler-windows
+        - Extract and add the path (e.g., `C:\poppler\Library\bin`) to the system environment variables.
+        - Verify: `pdftoppm -v`
+    - **Linux**:
 
-    ```env
-    GOOGLE_API_KEY=your_api_key_here
-    ```
+        ```bash
+        sudo apt-get install poppler-utils
+        ```
 
-4. **Download NLTK Data**
+    - **macOS**:
+
+        ```bash
+        brew install poppler
+        ```
+
+4. **Install Tesseract OCR**:
+
+    - **Windows**:
+        - Download from: https://github.com/UB-Mannheim/tesseract
+        - Install and ensure the path is added to system variables.
+        - Verify: `tesseract --version`
+    - **Linux**:
+
+        ```bash
+        sudo apt-get install tesseract-ocr
+        ```
+
+    - **macOS**:
+
+        ```bash
+        brew install tesseract
+        ```
+
+5. **Configure Google API Key**:
+
+    - Create a `.env` file in the project root:
+
+        ```env
+        GOOGLE_API_KEY=your_api_key_here
+        ```
+
+6. **Download NLTK Data**:
 
     ```python
     import nltk
     nltk.download('punkt')
     ```
 
-5. **Run the Application**
+7. **Run the Application**:
 
     ```bash
     python app.py
     ```
 
-    Visit `http://localhost:5000` in your browser.
+    Open [http://localhost:5000](http://localhost:5000) in your browser.
 
-6. **Ensure Folder Structure**
+---
 
-    - `uploads/`
-    - `recent_chats/`
+## Folder Structure
 
-    These folders are auto-created if missing but must be writable.
+- `uploads/` – Temporary uploaded PDFs (auto-cleared).
+- `recent_chats/` – Stores chat history as `chats.json`.
 
 ---
 
 ## Usage
 
-### 1. Upload a PDF
-
-- Go to `http://localhost:5000`
-- Upload your PDF file via the form
-- Wait for the success message
-
-### 2. Ask Questions
-
-- Type a question about the PDF (e.g., "What is the main topic?")
-- Press **Send** or hit Enter
-- View the AI-generated, document-specific answer
-
-### 3. View Recent Chats
-
-- The interface shows the last 5 interactions
-- Chat history is stored in `recent_chats/chats.json`
+1. **Upload a PDF**: Navigate to the app and upload a PDF file (text-based or scanned).
+2. **Interact**: Ask natural language questions about the document.
+3. **Review History**: View the last five interactions saved for reference.
 
 ---
 
-## Configuration
-
-- **API Key:** Set via `.env`
-- **Uploads:** Stored in `uploads/`; older files are overwritten
-- **Recent Chats:** Stored in `recent_chats/chats.json`
-- **Security:** File uploads are sanitized using `secure_filename`
-
----
-
-## Functionalities
+## Functional Overview
 
 ### PDF Processing
 
-- Extracts text via `pdfplumber`
-- Splits content into overlapping sentence chunks
+| Type         | Method Used                            |
+|--------------|-----------------------------------------|
+| Text-based   | `pdfplumber`                            |
+| Scanned PDFs | `pdf2image` + `pytesseract` (Tesseract) |
 
-### Vector Database
+- Text is chunked into 500-token segments with 20% overlap.
 
-- Embeds text chunks using `all-MiniLM-L6-v2`
-- FAISS index enables rapid similarity search
+### Vector Search
 
-### Query Handling (RAG-Based)
+- Embedding: `all-MiniLM-L6-v2`
+- Search: `FAISS` (retrieves top 3 chunks per query)
 
-- Embeds user query and retrieves top 3 relevant chunks
-- Uses Google Generative AI to generate responses
+### Query Handling (RAG)
 
-### Chat Interface
-
-- Responsive chat layout
-- Displays user queries and AI responses
-- Stores recent chats in JSON
-
-### Upload Management
-
-- Clears `uploads/` before each new file
-- Sanitizes filenames to prevent directory traversal
-
-### Error Handling
-
-- Provides user-friendly error messages for:
-  - Invalid file types
-  - Empty documents
-  - API/key issues
-
-### Logging
-
-- Logs key events for debugging and monitoring
+- User query is embedded.
+- Top chunks retrieved.
+- Prompt + chunks are sent to Google Generative AI.
+- Response is returned to the user.
 
 ---
 
-## RAG-Based Architecture
+## RAG Architecture
 
-### Retrieval
+**Retrieval**:
 
-- PDF content is chunked and embedded
-- Embeddings indexed with FAISS
-- Top 3 relevant chunks retrieved per query
+- Chunk PDF into overlapping segments
+- Store embeddings in FAISS index
 
-### Generation
+**Augmentation**:
 
-- Chunks and user query are sent to Google Generative AI
-- Response is generated based on PDF content and context
+- On each query, retrieve the top 3 relevant chunks
 
-This hybrid architecture ensures accuracy, speed, and relevance in responses.
+**Generation**:
 
----
-
-## Storage and Chat History
-
-### Recent Chats
-
-- Stored in `recent_chats/chats.json`
-- Stores query, response, and timestamp
-- Helps maintain context across sessions
-
-### PDF Uploads
-
-- Stored in `uploads/`
-- Automatically clears on new upload
-- Prevents storage bloat by storing only one file
+- Use Google Generative AI to craft a response using context
 
 ---
 
+## Error Handling
+
+Provides feedback for:
+
+- Invalid file formats
+- OCR failures
+- Missing installations (Poppler, Tesseract)
+- Empty/unreadable PDFs
+- API key issues
+
 ---
 
-## License
+## 📌 Tips for Scanned PDFs
 
-This project is open-source and available under the [MIT License](LICENSE).
+- Use high-quality scans (300 DPI recommended)
+- Ensure clear, legible text
+- Troubleshoot OCR errors by checking Poppler/Tesseract installations
+
+---
